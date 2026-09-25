@@ -1,0 +1,30 @@
+[
+  {
+    "id": "UAV1",
+    "position": [0, 0, 0],
+    "battery": 100,
+    "role": "SURVEY",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "UAV2",
+    "position": [0, 0, 0],
+    "battery": 100,
+    "role": "RELAY",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "UAV3",
+    "position": [0, 0, 0],
+    "battery": 100,
+    "role": "SURVEY",
+    "status": "ACTIVE"
+  },
+  {
+    "id": "UAV4",
+    "position": [0, 0, 0],
+    "battery": 100,
+    "role": "RESERVE",
+    "status": "ACTIVE"
+  }
+]

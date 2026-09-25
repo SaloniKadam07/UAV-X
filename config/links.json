@@ -1,0 +1,26 @@
+[
+  {
+    "from": "GCS",
+    "to": "UAV1",
+    "connected": true,
+    "quality": 1.0
+  },
+  {
+    "from": "UAV1",
+    "to": "UAV2",
+    "connected": true,
+    "quality": 0.9
+  },
+  {
+    "from": "UAV2",
+    "to": "UAV3",
+    "connected": true,
+    "quality": 0.8
+  },
+  {
+    "from": "UAV2",
+    "to": "UAV4",
+    "connected": true,
+    "quality": 0.85
+  }
+]
