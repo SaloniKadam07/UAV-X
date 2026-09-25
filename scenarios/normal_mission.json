@@ -1,0 +1,12 @@
+{
+  "scenario_id": "normal_mission",
+  "description": "Baseline UAV-X mission with all UAVs active and all communication links available.",
+  "failures": [],
+  "new_priority_events": [],
+  "expected_behavior": [
+    "Assign UAVs to available mission points",
+    "Maintain GCS connectivity",
+    "Keep relay UAV active",
+    "Complete mission without recovery actions"
+  ]
+}

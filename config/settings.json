@@ -1,0 +1,8 @@
+{
+  "battery_threshold": 20,
+  "communication_range": 100,
+  "minimum_link_quality": 0.5,
+  "minimum_safe_separation": 5,
+  "default_altitude": 3,
+  "return_home_battery": 15
+}

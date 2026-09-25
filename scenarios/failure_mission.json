@@ -1,0 +1,19 @@
+{
+  "scenario_id": "failure_mission",
+  "description": "UAV-X mission with a communication failure that requires relay recovery.",
+  "failures": [
+    {
+      "type": "LINK_FAILURE",
+      "source": "UAV1",
+      "target": "UAV2"
+    }
+  ],
+  "new_priority_events": [],
+  "expected_behavior": [
+    "Detect that UAV2, UAV3 and UAV4 lose GCS connectivity",
+    "Select a suitable connected UAV as a relay candidate",
+    "Change the selected UAV role to RELAY",
+    "Trigger network recovery logic",
+    "Continue the mission after recovery"
+  ]
+}

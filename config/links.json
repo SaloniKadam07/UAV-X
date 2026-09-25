@@ -8,7 +8,7 @@
   {
     "from": "UAV1",
     "to": "UAV2",
-    "connected": false,
+    "connected": true,
     "quality": 0.9
   },
   {
