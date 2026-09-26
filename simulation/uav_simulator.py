@@ -32,8 +32,8 @@ class Drone:
         if self.status != "LANDED":
             self.battery = max(0.0, self.battery - (0.05 * dt * 8.0))
 
-        # Critical battery auto-RTH rule (< 20%)
-        if self.battery < 20.0 and self.status not in ["RTH", "LANDED"]:
+        # Critical battery auto-RTH rule (< 20%) -> maps to RETURNING
+        if self.battery < 20.0 and self.status not in ["RETURNING", "LANDED"]:
             print(f"[{self.id}] Critical Battery ({self.battery:.1f}%)! Triggering Auto-RTH.")
             self.trigger_rth()
 
@@ -45,8 +45,9 @@ class Drone:
 
         if dist < 0.2:
             if self.status in ["NAVIGATING", "ACTIVE"]:
-                self.status = "HOLDING"
-            elif self.status == "RTH":
+                # HOLDING mapped to ACTIVE per swarm/constants.py
+                self.status = "ACTIVE"
+            elif self.status == "RETURNING":
                 self.target_pos[2] = 0.0
                 if self.pos[2] <= 0.05:
                     self.status = "LANDED"
@@ -57,7 +58,7 @@ class Drone:
             self.pos[2] += (dz / dist) * step
 
     def set_target(self, x, y, z):
-        if not self.failed and self.status != "RTH":
+        if not self.failed and self.status != "RETURNING":
             self.target_pos = [float(x), float(y), float(z)]
             self.status = "NAVIGATING"
             print(f"[{self.id}] En route to waypoint: {self.target_pos}")
@@ -65,7 +66,8 @@ class Drone:
     def trigger_rth(self):
         if not self.failed:
             self.target_pos = [self.home_pos[0], self.home_pos[1], 2.0]
-            self.status = "RTH"
+            # RTH mapped to RETURNING per swarm/constants.py
+            self.status = "RETURNING"
             print(f"[{self.id}] RTH engaged -> returning to {self.home_pos}")
 
     def mark_failed(self):
@@ -74,11 +76,17 @@ class Drone:
         print(f"[{self.id}] FAILURE INJECTED.")
 
     def to_dict(self):
+        output_status = self.status
+        if output_status in ["HOLDING", "NAVIGATING"]:
+            output_status = "ACTIVE"
+        elif output_status == "RTH":
+            output_status = "RETURNING"
+
         return {
             "id": self.id,
             "role": self.role,
             "battery": int(round(self.battery)),
-            "status": self.status,
+            "status": output_status,
             "position": [round(c, 2) for c in self.pos]
         }
 
