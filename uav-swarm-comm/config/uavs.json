@@ -1,0 +1,54 @@
+{
+  "uavs": [
+    {
+      "id": "UAV_1",
+      "position": { "x": 0, "y": 0, "z": 100 },
+      "battery": 95,
+      "status": "idle",
+      "role": "mission",
+      "current_mission": null,
+      "max_speed": 15.0,
+      "comm_range": 800
+    },
+    {
+      "id": "UAV_2",
+      "position": { "x": 200, "y": 100, "z": 100 },
+      "battery": 88,
+      "status": "idle",
+      "role": "mission",
+      "current_mission": null,
+      "max_speed": 15.0,
+      "comm_range": 800
+    },
+    {
+      "id": "UAV_3",
+      "position": { "x": 400, "y": 200, "z": 100 },
+      "battery": 72,
+      "status": "idle",
+      "role": "relay",
+      "current_mission": null,
+      "max_speed": 15.0,
+      "comm_range": 800
+    },
+    {
+      "id": "UAV_4",
+      "position": { "x": 100, "y": 300, "z": 100 },
+      "battery": 60,
+      "status": "idle",
+      "role": "standby",
+      "current_mission": null,
+      "max_speed": 15.0,
+      "comm_range": 800
+    },
+    {
+      "id": "UAV_5",
+      "position": { "x": 300, "y": 50, "z": 100 },
+      "battery": 80,
+      "status": "idle",
+      "role": "mission",
+      "current_mission": null,
+      "max_speed": 15.0,
+      "comm_range": 800
+    }
+  ]
+}

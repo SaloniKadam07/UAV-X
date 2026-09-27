@@ -1,0 +1,41 @@
+{
+  "scenario": "failure_mission",
+  "description": "Link failure between UAV_2 and UAV_3 at t=10, UAV_4 fails at t=20. Tests relay recovery and mission reassignment.",
+  "events": [
+    {
+      "time": 0,
+      "type": "mission_arrive",
+      "mission_id": "M1"
+    },
+    {
+      "time": 3,
+      "type": "mission_arrive",
+      "mission_id": "M2"
+    },
+    {
+      "time": 10,
+      "type": "link_fail",
+      "link": { "from": "UAV_2", "to": "UAV_3" }
+    },
+    {
+      "time": 12,
+      "type": "mission_arrive",
+      "mission_id": "M3"
+    },
+    {
+      "time": 20,
+      "type": "uav_fail",
+      "uav_id": "UAV_4"
+    },
+    {
+      "time": 25,
+      "type": "link_fail",
+      "link": { "from": "GCS", "to": "UAV_2" }
+    },
+    {
+      "time": 45,
+      "type": "mission_complete",
+      "mission_id": "M1"
+    }
+  ]
+}
