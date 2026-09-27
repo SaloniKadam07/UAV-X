@@ -1,20 +1,156 @@
-[
-  {
-    "id": "P1",
-    "position": [10, 5, 0],
-    "priority": "NORMAL",
-    "status": "PENDING"
+{
+  "arena": {
+    "origin_offset_x": 75.0,
+    "width_x": 1000.0,
+    "height_y": 1000.0,
+    "max_altitude": 100.0
   },
-  {
-    "id": "P2",
-    "position": [20, 10, 0],
-    "priority": "NORMAL",
-    "status": "PENDING"
+  "constraints": {
+    "max_comm_range_m": 100.0,
+    "min_separation_m": 20.0,
+    "max_reporting_delay_s": 10.0,
+    "max_speed_mps": 5.0
   },
-  {
-    "id": "P3",
-    "position": [15, 20, 0],
-    "priority": "HIGH",
-    "status": "PENDING"
-  }
-]
+  "pois": [
+    {
+      "id": "POI_02",
+      "position": [
+        958.8,
+        912.3,
+        0.0
+      ],
+      "spawn_time_s": 50,
+      "detected": true,
+      "reported_to_center": true,
+      "detect_time_s": 175.0,
+      "report_time_s": 175.0,
+      "detected_by": "UAV3"
+    },
+    {
+      "id": "POI_04",
+      "position": [
+        417.5,
+        785.8,
+        0.0
+      ],
+      "spawn_time_s": 66,
+      "detected": true,
+      "reported_to_center": true,
+      "detect_time_s": 66.0,
+      "report_time_s": 66.0,
+      "detected_by": "UAV3"
+    },
+    {
+      "id": "POI_06",
+      "position": [
+        156.5,
+        840.4,
+        0.0
+      ],
+      "spawn_time_s": 78,
+      "detected": true,
+      "reported_to_center": true,
+      "detect_time_s": 15.0,
+      "report_time_s": 15.0,
+      "detected_by": "UAV3"
+    },
+    {
+      "id": "POI_07",
+      "position": [
+        374.0,
+        148.3,
+        0.0
+      ],
+      "spawn_time_s": 79,
+      "detected": true,
+      "reported_to_center": true,
+      "detect_time_s": 57.0,
+      "report_time_s": 57.0,
+      "detected_by": "UAV1"
+    },
+    {
+      "id": "POI_09",
+      "position": [
+        542.2,
+        475.5,
+        0.0
+      ],
+      "spawn_time_s": 81,
+      "detected": true,
+      "reported_to_center": true,
+      "detect_time_s": 133.0,
+      "report_time_s": 133.0,
+      "detected_by": "UAV1"
+    },
+    {
+      "id": "POI_08",
+      "position": [
+        591.7,
+        263.3,
+        0.0
+      ],
+      "spawn_time_s": 146,
+      "detected": true,
+      "reported_to_center": true,
+      "detect_time_s": 178.0,
+      "report_time_s": 178.0,
+      "detected_by": "UAV1"
+    },
+    {
+      "id": "POI_01",
+      "position": [
+        1026.2,
+        585.2,
+        0.0
+      ],
+      "spawn_time_s": 165,
+      "detected": true,
+      "reported_to_center": true,
+      "detect_time_s": 526.0,
+      "report_time_s": 526.0,
+      "detected_by": "UAV3"
+    },
+    {
+      "id": "POI_03",
+      "position": [
+        450.5,
+        309.6,
+        0.0
+      ],
+      "spawn_time_s": 234,
+      "detected": true,
+      "reported_to_center": true,
+      "detect_time_s": 95.0,
+      "report_time_s": 95.0,
+      "detected_by": "UAV1"
+    },
+    {
+      "id": "POI_05",
+      "position": [
+        311.6,
+        330.9,
+        0.0
+      ],
+      "spawn_time_s": 296,
+      "detected": true,
+      "reported_to_center": true,
+      "detect_time_s": 239.0,
+      "report_time_s": 239.0,
+      "detected_by": "UAV1"
+    },
+    {
+      "id": "POI_10",
+      "position": [
+        560.3,
+        642.3,
+        0.0
+      ],
+      "spawn_time_s": 298,
+      "detected": true,
+      "reported_to_center": true,
+      "detect_time_s": 440.0,
+      "report_time_s": 440.0,
+      "detected_by": "UAV3"
+    }
+  ]
+}

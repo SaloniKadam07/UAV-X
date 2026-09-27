@@ -1,30 +1,50 @@
 [
   {
     "id": "UAV1",
-    "position": [0, 0, 0],
-    "battery": 65,
     "role": "SURVEY",
-    "status": "ACTIVE"
+    "battery": 100,
+    "status": "LANDED",
+    "position": [
+      0.0,
+      200.0,
+      0.0
+    ],
+    "connected_to_gcs": false
   },
   {
     "id": "UAV2",
-    "position": [0, 0, 0],
-    "battery": 100,
     "role": "RELAY",
-    "status": "ACTIVE"
+    "battery": 100,
+    "status": "LANDED",
+    "position": [
+      0.0,
+      380.0,
+      0.0
+    ],
+    "connected_to_gcs": false
   },
   {
     "id": "UAV3",
-    "position": [0, 0, 0],
-    "battery": 85,
     "role": "SURVEY",
-    "status": "ACTIVE"
+    "battery": 100,
+    "status": "LANDED",
+    "position": [
+      0.0,
+      780.0,
+      0.0
+    ],
+    "connected_to_gcs": false
   },
   {
     "id": "UAV4",
-    "position": [0, 0, 0],
-    "battery": 40,
-    "role": "RESERVE",
-    "status": "ACTIVE"
+    "role": "RELAY",
+    "battery": 100,
+    "status": "LANDED",
+    "position": [
+      0.0,
+      580.0,
+      0.0
+    ],
+    "connected_to_gcs": false
   }
 ]

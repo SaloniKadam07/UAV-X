@@ -1,0 +1,104 @@
+{
+  "pois": [
+    {
+      "id": "POI_01",
+      "pos": [
+        150,
+        200,
+        20.0
+      ],
+      "detected": false,
+      "connected": false
+    },
+    {
+      "id": "POI_02",
+      "pos": [
+        320,
+        200,
+        20.0
+      ],
+      "detected": false,
+      "connected": false
+    },
+    {
+      "id": "POI_03",
+      "pos": [
+        490,
+        200,
+        20.0
+      ],
+      "detected": false,
+      "connected": false
+    },
+    {
+      "id": "POI_04",
+      "pos": [
+        660,
+        200,
+        20.0
+      ],
+      "detected": false,
+      "connected": false
+    },
+    {
+      "id": "POI_05",
+      "pos": [
+        830,
+        200,
+        20.0
+      ],
+      "detected": false,
+      "connected": false
+    },
+    {
+      "id": "POI_06",
+      "pos": [
+        150,
+        650,
+        20.0
+      ],
+      "detected": false,
+      "connected": false
+    },
+    {
+      "id": "POI_07",
+      "pos": [
+        320,
+        650,
+        20.0
+      ],
+      "detected": false,
+      "connected": false
+    },
+    {
+      "id": "POI_08",
+      "pos": [
+        490,
+        650,
+        20.0
+      ],
+      "detected": false,
+      "connected": false
+    },
+    {
+      "id": "POI_09",
+      "pos": [
+        660,
+        650,
+        20.0
+      ],
+      "detected": false,
+      "connected": false
+    },
+    {
+      "id": "POI_10",
+      "pos": [
+        830,
+        650,
+        20.0
+      ],
+      "detected": false,
+      "connected": false
+    }
+  ]
+}
