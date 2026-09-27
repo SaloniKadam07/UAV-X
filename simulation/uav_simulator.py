@@ -3,16 +3,22 @@ import json
 import math
 import time
 from pathlib import Path
+import sys
 
 BASE_DIR = Path(__file__).resolve().parent.parent
+sys.path.append(str(BASE_DIR))
+from swarm.swarm_planner import SwarmPlanner
+
 UAVS_PATH = BASE_DIR / "config" / "uavs.json"
 MISSION_PATH = BASE_DIR / "config" / "mission.json"
 
-MAX_SPEED = 5.0          # 5 m/s max velocity
-MAX_ALTITUDE = 100.0      # 100 m operational ceiling
-MAX_COMM_RANGE = 100.0    # 100 m max direct RF link
-MIN_SEPARATION = 20.0     # 20 m safety buffer
-MAX_FLIGHT_TIME = 1200.0  # 20 min endurance (seconds)
+MAX_SPEED = 5.0           # 5 m/s max velocity
+MAX_ALTITUDE = 100.0       # 100 m operational ceiling
+MAX_COMM_RANGE = 100.0     # 100 m maximum RF comm link
+MIN_SEPARATION = 20.0      # 20 m safety buffer
+MAX_FLIGHT_TIME = 1200.0   # 20 min battery endurance (seconds)
+MISSION_TIMEOUT = 2700.0   # 45 min mission limit (seconds)
+RECALL_TIME = 2520.0       # Auto-recall at 42 mins to ensure touchdown by 45 mins
 GCS_POS = [0.0, 500.0, 0.0]
 
 class Drone:
@@ -24,10 +30,11 @@ class Drone:
         self.home_pos = list(self.pos)
         self.target_pos = list(self.pos)
         self.battery = float(data.get("battery", 100.0))
-        self.status = data.get("status", "ACTIVE")
+        self.status = data.get("status", "STANDBY")
         self.failed = False
         self.speed = MAX_SPEED
         self.connected_to_gcs = False
+        self.waypoints = []
 
     def update(self, dt):
         if self.failed:
@@ -36,12 +43,12 @@ class Drone:
                 self.pos[2] = max(0.0, self.pos[2] - 3.0 * dt)
             return
 
-        if self.status != "LANDED":
+        if self.status not in ["STANDBY", "LANDED"]:
             discharge_rate = (100.0 / MAX_FLIGHT_TIME)
             self.battery = max(0.0, self.battery - (discharge_rate * dt))
 
-        if self.battery < 20.0 and self.status not in ["RETURNING", "LANDED"]:
-            print(f"[{self.id}] Critical battery ({self.battery:.1f}%)! Returning to home.")
+        if self.battery < 22.0 and self.status not in ["RETURNING", "LANDED", "STANDBY"]:
+            print(f"⚠️ [{self.id}] Battery critically low ({self.battery:.1f}%)! Executing RTH.")
             self.trigger_rth()
 
         dx = self.target_pos[0] - self.pos[0]
@@ -49,13 +56,18 @@ class Drone:
         dz = self.target_pos[2] - self.pos[2]
         dist = math.sqrt(dx*dx + dy*dy + dz*dz)
 
-        if dist < 0.5:
-            if self.status == "NAVIGATING":
-                self.status = "ACTIVE"
-            elif self.status == "RETURNING":
+        if dist < 1.0:
+            if self.status == "RETURNING":
                 self.target_pos[2] = 0.0
                 if self.pos[2] <= 0.2:
                     self.status = "LANDED"
+                    self.pos[2] = 0.0
+            elif self.status in ["NAVIGATING", "ACTIVE"]:
+                if self.waypoints:
+                    next_wp = self.waypoints.pop(0)
+                    self.set_target(next_wp[0], next_wp[1], next_wp[2])
+                else:
+                    self.status = "ACTIVE"
         else:
             step = min(dist, self.speed * dt)
             self.pos[0] += (dx / dist) * step
@@ -69,7 +81,8 @@ class Drone:
 
     def trigger_rth(self):
         if not self.failed:
-            self.target_pos = [self.home_pos[0], self.home_pos[1], 20.0]
+            self.waypoints = []
+            self.target_pos = [self.home_pos[0], self.home_pos[1], 25.0]
             self.status = "RETURNING"
 
     def to_dict(self):
@@ -87,36 +100,63 @@ class UAVSimulator:
         with open(UAVS_PATH, "r") as f:
             raw_uavs = json.load(f)
         self.drones = {d["id"]: Drone(d) for d in raw_uavs}
-        
+        self.planner = SwarmPlanner()
+
         self.pois = []
+        self.mission_data = {}
         if MISSION_PATH.exists():
             with open(MISSION_PATH, "r") as f:
-                self.mission_data = json.load(f)
-                self.pois = self.mission_data.get("pois", [])
-        else:
-            self.mission_data = {}
+                loaded = json.load(f)
+                if isinstance(loaded, list):
+                    self.pois = loaded
+                    self.mission_data = {"pois": self.pois}
+                elif isinstance(loaded, dict):
+                    self.mission_data = loaded
+                    self.pois = self.mission_data.get("pois", [])
 
         self.sim_time = 0.0
+        self.dispatch_initial_missions()
+
+    def dispatch_initial_missions(self):
+        # Dedicated altitude separation layers: 30m, 50m, 70m, 90m
+        if "UAV2" in self.drones:
+            self.drones["UAV2"].role = "RELAY"
+            self.drones["UAV2"].set_target(85.0, 480.0, 30.0)
+        if "UAV4" in self.drones:
+            self.drones["UAV4"].role = "RELAY"
+            self.drones["UAV4"].set_target(170.0, 520.0, 50.0)
+
+        if "UAV1" in self.drones:
+            self.drones["UAV1"].role = "SURVEY"
+            wps1 = self.planner.generate_survey_corridors(sector_id=0, total_sectors=2)
+            # Assign cruise altitude 70m for Sector 0
+            wps1 = [[w[0], w[1], 70.0] for w in wps1]
+            self.drones["UAV1"].waypoints = wps1[1:]
+            self.drones["UAV1"].set_target(*wps1[0])
+
+        if "UAV3" in self.drones:
+            self.drones["UAV3"].role = "SURVEY"
+            wps2 = self.planner.generate_survey_corridors(sector_id=1, total_sectors=2)
+            # Assign cruise altitude 90m for Sector 1
+            wps2 = [[w[0], w[1], 90.0] for w in wps2]
+            self.drones["UAV3"].waypoints = wps2[1:]
+            self.drones["UAV3"].set_target(*wps2[0])
 
     def update_mesh_connectivity(self):
-        """Build ad-hoc topology graph and find multi-hop routes back to GCS."""
-        nodes = ["GCS"] + [d.id for d in self.drones.values() if d.status not in ["LANDED", "FAILED"]]
+        active_nodes = ["GCS"] + [d.id for d in self.drones.values() if d.status not in ["LANDED", "FAILED", "STANDBY"]]
         positions = {"GCS": GCS_POS}
         for d in self.drones.values():
             positions[d.id] = d.pos
 
-        # Adjacency list within 100m range
-        adj = {node: [] for node in nodes}
-        for i in range(len(nodes)):
-            for j in range(i + 1, len(nodes)):
-                n1, n2 = nodes[i], nodes[j]
-                p1, p2 = positions[n1], positions[n2]
-                dist = math.sqrt(sum((a - b)**2 for a, b in zip(p1, p2)))
-                if dist <= MAX_COMM_RANGE:
+        adj = {node: [] for node in active_nodes}
+        for i in range(len(active_nodes)):
+            for j in range(i + 1, len(active_nodes)):
+                n1, n2 = active_nodes[i], active_nodes[j]
+                d = math.dist(positions[n1], positions[n2])
+                if d <= MAX_COMM_RANGE:
                     adj[n1].append(n2)
                     adj[n2].append(n1)
 
-        # BFS from GCS to find reachable UAVs
         visited = set(["GCS"])
         queue = ["GCS"]
         while queue:
@@ -129,12 +169,9 @@ class UAVSimulator:
         for d in self.drones.values():
             d.connected_to_gcs = (d.id in visited)
 
-    def check_poi_detections(self):
-        """Sensors detect POIs within 60m. Reports must reach GCS via mesh within 10s."""
+    def process_poi_detections(self):
         for poi in self.pois:
             px, py = poi["position"][0], poi["position"][1]
-            
-            # Check detection by active survey drones
             for d in self.drones.values():
                 if d.status in ["ACTIVE", "NAVIGATING"]:
                     dist = math.hypot(d.pos[0] - px, d.pos[1] - py)
@@ -142,25 +179,30 @@ class UAVSimulator:
                         poi["detected"] = True
                         poi["detect_time_s"] = round(self.sim_time, 1)
                         poi["detected_by"] = d.id
-                        print(f"🎯 [{d.id}] DETECTED {poi['id']} at ({px:.1f}, {py:.1f})! Seeking GCS route...")
+                        print(f"🎯 [{d.id}] DETECTED {poi['id']} at ({px:.1f}, {py:.1f})")
 
-                    # Relay through connected mesh to GCS
                     if poi.get("detected") and not poi.get("reported_to_center"):
                         if d.connected_to_gcs:
                             poi["reported_to_center"] = True
                             poi["report_time_s"] = round(self.sim_time, 1)
                             latency = poi["report_time_s"] - poi["detect_time_s"]
                             flag = "✅ COMPLIANT" if latency <= 10.0 else "❌ VIOLATION (>10s)"
-                            print(f"📡 [GCS] REPORT RECEIVED: {poi['id']} via {d.id} | Latency: {latency:.1f}s [{flag}]")
+                            print(f"📡 [GCS] REPORT: {poi['id']} via {d.id} | Latency: {latency:.1f}s [{flag}]")
 
     def check_separation(self):
-        active = [d for d in self.drones.values() if d.status not in ["LANDED", "FAILED"]]
+        active = [d for d in self.drones.values() if d.status not in ["LANDED", "FAILED", "STANDBY"]]
         for i in range(len(active)):
             for j in range(i + 1, len(active)):
-                p1, p2 = active[i].pos, active[j].pos
-                dist = math.sqrt(sum((a - b)**2 for a, b in zip(p1, p2)))
+                dist = math.dist(active[i].pos, active[j].pos)
                 if dist < MIN_SEPARATION:
                     print(f"⚠️ PROXIMITY ALERT: {active[i].id} & {active[j].id} ({dist:.1f}m < 20m)")
+
+    def check_mission_timer(self):
+        if self.sim_time >= RECALL_TIME:
+            for d in self.drones.values():
+                if d.status not in ["RETURNING", "LANDED"]:
+                    print(f"🛑 Mission approaching 45min limit. Recalling {d.id} to GCS.")
+                    d.trigger_rth()
 
     def save_state(self):
         data = [drone.to_dict() for drone in self.drones.values()]
@@ -177,28 +219,19 @@ class UAVSimulator:
         for drone in self.drones.values():
             drone.update(dt)
         self.update_mesh_connectivity()
-        self.check_poi_detections()
+        self.process_poi_detections()
         self.check_separation()
+        self.check_mission_timer()
         self.save_state()
 
-    def run_mission(self):
-        print("\n=== Executing Swarm Relay & POI Search Mission ===")
+    def run_autonomous_mission(self, steps=80):
+        print("\n=== UAV-X Autonomous Swarm Mission Initialized ===")
         dt = 0.5
-
-        # Dispatch UAV2 & UAV4 as relay chain stations across the 75m buffer line
-        self.drones["UAV2"].set_target(80.0, 485.0, 30.0)
-        self.drones["UAV4"].set_target(160.0, 450.0, 40.0)
-
-        # Dispatch UAV1 and UAV3 on deep survey vector towards nearest POIs
-        self.drones["UAV1"].set_target(220.0, 420.0, 40.0)
-        self.drones["UAV3"].set_target(210.0, 550.0, 45.0)
-
-        for _ in range(60):
+        for _ in range(steps):
             self.step(dt)
-            time.sleep(0.02)
-
-        print("--> Mission iteration complete. Telemetry saved.")
+            time.sleep(0.03)
+        print("--> Mission cycle executed cleanly. Telemetry synced.")
 
 if __name__ == "__main__":
     sim = UAVSimulator()
-    sim.run_mission()
+    sim.run_autonomous_mission()
