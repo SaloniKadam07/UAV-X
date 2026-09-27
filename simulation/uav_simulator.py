@@ -422,5 +422,23 @@ class UAVSimulator:
 
 
 if __name__ == "__main__":
+    import time
+
+    print("[*] Initializing UAV Swarm Simulator...")
     sim = UAVSimulator()
-    sim.run_stage1_demo()
+
+    print(f"[*] Starting live simulation run (Mission duration: {MISSION_TIMEOUT}s)...")
+
+    dt = 1.0
+
+    while sim.sim_time < MISSION_TIMEOUT:
+        sim.step(dt=dt)
+        time.sleep(0.05)
+
+        if int(sim.sim_time) % 50 == 0:
+            print(
+                f"[Sim Time: {sim.sim_time:.0f}s / "
+                f"{MISSION_TIMEOUT}s] Swarm active..."
+            )
+
+    print("[*] Simulation complete. Swarm landed.")
