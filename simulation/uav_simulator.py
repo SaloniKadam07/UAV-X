@@ -13,12 +13,12 @@ UAVS_PATH = BASE_DIR / "config" / "uavs.json"
 MISSION_PATH = BASE_DIR / "config" / "mission.json"
 
 MAX_SPEED = 5.0           # 5 m/s max velocity
-MAX_ALTITUDE = 100.0       # 100 m operational ceiling
-MAX_COMM_RANGE = 100.0     # 100 m maximum RF comm link
+MAX_ALTITUDE = 100.0       # 100 m ceiling
+MAX_COMM_RANGE = 100.0     # 100 m RF comm link
 MIN_SEPARATION = 20.0      # 20 m safety buffer
-MAX_FLIGHT_TIME = 1200.0   # 20 min battery endurance (seconds)
-MISSION_TIMEOUT = 2700.0   # 45 min mission limit (seconds)
-RECALL_TIME = 2520.0       # Auto-recall at 42 mins to ensure touchdown by 45 mins
+MAX_FLIGHT_TIME = 1200.0   # 20 min battery endurance
+MISSION_TIMEOUT = 2700.0   # 45 min mission limit
+RECALL_TIME = 2520.0       # Auto-recall at 42 mins
 GCS_POS = [0.0, 500.0, 0.0]
 
 class Drone:
@@ -35,6 +35,8 @@ class Drone:
         self.speed = MAX_SPEED
         self.connected_to_gcs = False
         self.waypoints = []
+        self.sector_id = None
+        self.relief_requested = False
 
     def update(self, dt):
         if self.failed:
@@ -43,13 +45,17 @@ class Drone:
                 self.pos[2] = max(0.0, self.pos[2] - 3.0 * dt)
             return
 
+        # Discharge while in flight
         if self.status not in ["STANDBY", "LANDED"]:
             discharge_rate = (100.0 / MAX_FLIGHT_TIME)
             self.battery = max(0.0, self.battery - (discharge_rate * dt))
 
-        if self.battery < 22.0 and self.status not in ["RETURNING", "LANDED", "STANDBY"]:
-            print(f"⚠️ [{self.id}] Battery critically low ({self.battery:.1f}%)! Executing RTH.")
-            self.trigger_rth()
+        # Recharge while landed at base pad
+        if self.status == "LANDED" and self.battery < 100.0:
+            recharge_rate = (100.0 / 600.0) # 10 min fast recharge
+            self.battery = min(100.0, self.battery + recharge_rate * dt)
+            if self.battery >= 99.0:
+                self.status = "STANDBY"
 
         dx = self.target_pos[0] - self.pos[0]
         dy = self.target_pos[1] - self.pos[1]
@@ -62,6 +68,7 @@ class Drone:
                 if self.pos[2] <= 0.2:
                     self.status = "LANDED"
                     self.pos[2] = 0.0
+                    self.relief_requested = False
             elif self.status in ["NAVIGATING", "ACTIVE"]:
                 if self.waypoints:
                     next_wp = self.waypoints.pop(0)
@@ -118,29 +125,50 @@ class UAVSimulator:
         self.dispatch_initial_missions()
 
     def dispatch_initial_missions(self):
-        # Dedicated altitude separation layers: 30m, 50m, 70m, 90m
+        # Layered flight corridors with non-conflicting climb paths
         if "UAV2" in self.drones:
             self.drones["UAV2"].role = "RELAY"
-            self.drones["UAV2"].set_target(85.0, 480.0, 30.0)
+            self.drones["UAV2"].set_target(85.0, 460.0, 30.0)
         if "UAV4" in self.drones:
             self.drones["UAV4"].role = "RELAY"
             self.drones["UAV4"].set_target(170.0, 520.0, 50.0)
 
         if "UAV1" in self.drones:
             self.drones["UAV1"].role = "SURVEY"
+            self.drones["UAV1"].sector_id = 0
             wps1 = self.planner.generate_survey_corridors(sector_id=0, total_sectors=2)
-            # Assign cruise altitude 70m for Sector 0
             wps1 = [[w[0], w[1], 70.0] for w in wps1]
             self.drones["UAV1"].waypoints = wps1[1:]
-            self.drones["UAV1"].set_target(*wps1[0])
+            self.drones["UAV1"].set_target(175.0, 200.0, 70.0)
 
         if "UAV3" in self.drones:
             self.drones["UAV3"].role = "SURVEY"
+            self.drones["UAV3"].sector_id = 1
             wps2 = self.planner.generate_survey_corridors(sector_id=1, total_sectors=2)
-            # Assign cruise altitude 90m for Sector 1
             wps2 = [[w[0], w[1], 90.0] for w in wps2]
             self.drones["UAV3"].waypoints = wps2[1:]
-            self.drones["UAV3"].set_target(*wps2[0])
+            self.drones["UAV3"].set_target(175.0, 750.0, 90.0)
+
+    def manage_battery_rotation(self):
+        """Monitors battery levels and orchestrates reserve swaps."""
+        for drone in self.drones.values():
+            if drone.status in ["ACTIVE", "NAVIGATING"] and drone.battery <= 25.0 and not drone.relief_requested:
+                drone.relief_requested = True
+                print(f"⚠️ [{drone.id}] Battery at {drone.battery:.1f}%! Requesting relief rotation.")
+                
+                # Check for an available standby drone at base
+                standby = [d for d in self.drones.values() if d.status == "STANDBY" and d.battery > 80.0]
+                if standby:
+                    reliever = standby[0]
+                    reliever.role = drone.role
+                    reliever.sector_id = drone.sector_id
+                    reliever.waypoints = list(drone.waypoints)
+                    
+                    # Handover target waypoint
+                    reliever.set_target(drone.target_pos[0], drone.target_pos[1], drone.target_pos[2])
+                    print(f"🔄 Swapping: {reliever.id} taking over sector {drone.sector_id} from {drone.id}")
+                
+                drone.trigger_rth()
 
     def update_mesh_connectivity(self):
         active_nodes = ["GCS"] + [d.id for d in self.drones.values() if d.status not in ["LANDED", "FAILED", "STANDBY"]]
@@ -218,6 +246,7 @@ class UAVSimulator:
         self.sim_time += dt
         for drone in self.drones.values():
             drone.update(dt)
+        self.manage_battery_rotation()
         self.update_mesh_connectivity()
         self.process_poi_detections()
         self.check_separation()
@@ -225,7 +254,7 @@ class UAVSimulator:
         self.save_state()
 
     def run_autonomous_mission(self, steps=80):
-        print("\n=== UAV-X Autonomous Swarm Mission Initialized ===")
+        print("\n=== UAV-X Swarm Mission Running (Battery Management Active) ===")
         dt = 0.5
         for _ in range(steps):
             self.step(dt)
