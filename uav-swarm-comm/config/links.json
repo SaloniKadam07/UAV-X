@@ -1,0 +1,13 @@
+{
+  "links": [
+    { "from": "GCS",   "to": "UAV_1", "quality": 0.95, "active": true },
+    { "from": "GCS",   "to": "UAV_2", "quality": 0.90, "active": true },
+    { "from": "UAV_1", "to": "UAV_2", "quality": 0.85, "active": true },
+    { "from": "UAV_1", "to": "UAV_3", "quality": 0.70, "active": true },
+    { "from": "UAV_2", "to": "UAV_3", "quality": 0.80, "active": true },
+    { "from": "UAV_2", "to": "UAV_5", "quality": 0.75, "active": true },
+    { "from": "UAV_3", "to": "UAV_4", "quality": 0.65, "active": true },
+    { "from": "UAV_3", "to": "UAV_5", "quality": 0.60, "active": true },
+    { "from": "UAV_4", "to": "UAV_5", "quality": 0.55, "active": true }
+  ]
+}
