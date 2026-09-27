@@ -27,3 +27,5 @@ logs/*
 # Temporary files
 *.tmp
 *.log
+
+vision/sample_data/
