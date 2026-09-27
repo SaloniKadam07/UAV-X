@@ -43,7 +43,6 @@ class Drone:
         pos = data.get("position", default_pos)
         self.pos = [float(pos[0]), float(pos[1]), float(pos[2])]
 
-        # Keep a stable home position independent of runtime telemetry.
         home = data.get("home_position", DEFAULT_PADS.get(self.id, self.pos))
         self.home_pos = [float(home[0]), float(home[1]), float(home[2])]
 
@@ -69,7 +68,6 @@ class Drone:
             discharge_rate = 100.0 / MAX_FLIGHT_TIME
             self.battery = max(0.0, self.battery - discharge_rate * dt)
 
-        # Use the shared config value instead of a hard-coded RTH threshold.
         if (
             self.battery < self.rth_battery_threshold
             and self.status not in ["RETURNING", "LANDED", "STANDBY"]
@@ -144,7 +142,6 @@ class Drone:
                 min(float(z), MAX_ALTITUDE),
             ]
             self.status = "NAVIGATING"
-            print(f"[{self.id}] En route to waypoint: {self.target_pos}")
 
     def trigger_rth(self):
         if not self.failed:
@@ -163,8 +160,8 @@ class Drone:
         print(f"[{self.id}] FAILURE INJECTED.")
 
     def to_dict(self):
-        # Keep richer simulator states internal while exposing shared interface states.
         output_status = self.status
+
         if output_status in ["HOLDING", "NAVIGATING", "LANDED", "STANDBY"]:
             output_status = "ACTIVE"
         elif output_status == "RTH":
@@ -189,10 +186,7 @@ class UAVSimulator:
             raw_uavs = json.load(f)
 
         self.drones = {
-            d["id"]: Drone(
-                d,
-                self.settings["return_home_battery"],
-            )
+            d["id"]: Drone(d, self.settings["return_home_battery"])
             for d in raw_uavs
         }
 
@@ -351,7 +345,6 @@ class UAVSimulator:
         with open(INITIAL_UAVS_PATH, "r") as f:
             initial_uavs = json.load(f)
 
-        # Rebuild a deterministic clean state using each UAV's assigned pad.
         reset_uavs = []
         for data in initial_uavs:
             clean = dict(data)
@@ -366,16 +359,12 @@ class UAVSimulator:
             json.dump(reset_uavs, f, indent=2)
 
         self.drones = {
-            d["id"]: Drone(
-                d,
-                self.settings["return_home_battery"],
-            )
+            d["id"]: Drone(d, self.settings["return_home_battery"])
             for d in reset_uavs
         }
 
         self.sim_time = 0.0
 
-        # Reset POI runtime flags so repeated demos are reproducible.
         for poi in self.pois:
             poi.pop("detected", None)
             poi.pop("detect_time_s", None)

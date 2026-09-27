@@ -27,12 +27,18 @@ for uav in uavs:
     )
 
 print("\n=== MISSION POINTS ===")
-for point in mission:
+
+if isinstance(mission, dict):
+    mission_points = mission.get("pois", [])
+else:
+    mission_points = mission
+
+for point in mission_points:
     print(
         f"{point['id']} | "
-        f"Priority: {point['priority']} | "
-        f"Status: {point['status']} | "
-        f"Position: {point['position']}"
+        f"Priority: {point.get('priority', 'N/A')} | "
+        f"Status: {point.get('status', 'N/A')} | "
+        f"Position: {point.get('position', [])}"
     )
 
 print("\n=== COMMUNICATION LINKS ===")
