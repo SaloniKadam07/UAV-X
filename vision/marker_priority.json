@@ -1,0 +1,9 @@
+{
+  "_comment": "Vision-owned marker->priority mapping. This is NOT config/mission.json (that file holds the swarm's existing mission points, not a priority lookup table - different schema entirely). Marker IDs here match the ArUco marker_id values used in detector.py.",
+  "target_priorities": {
+    "1": "CRITICAL",
+    "2": "HIGH",
+    "3": "HIGH"
+  },
+  "default_priority": "STABLE"
+}
