@@ -27,10 +27,10 @@ from priority import classify_priority, load_priority_map
 # team decides vision's CRITICAL/HIGH/STABLE should be translated down to
 # the NORMAL/HIGH values actually used in config/mission.json - leave it
 # False (pass-through) until that's agreed.
-TRANSLATE_TO_SWARM_VOCAB = False
+TRANSLATE_TO_SWARM_VOCAB = True
 
 _SWARM_VOCAB_TRANSLATION = {
-    "CRITICAL": "HIGH",
+    "CRITICAL": "CRITICAL",
     "HIGH": "HIGH",
     "STABLE": "NORMAL",
 }
