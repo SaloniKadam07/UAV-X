@@ -1,0 +1,37 @@
+{
+  "missions": [
+    {
+      "id": "M1",
+      "type": "surveillance",
+      "priority": "high",
+      "target": { "x": 500, "y": 300, "z": 100 },
+      "status": "pending",
+      "assigned_uav": null,
+      "requirements": {
+        "min_battery": 40
+      }
+    },
+    {
+      "id": "M2",
+      "type": "delivery",
+      "priority": "medium",
+      "target": { "x": 150, "y": 400, "z": 80 },
+      "status": "pending",
+      "assigned_uav": null,
+      "requirements": {
+        "min_battery": 50
+      }
+    },
+    {
+      "id": "M3",
+      "type": "inspection",
+      "priority": "critical",
+      "target": { "x": 700, "y": 100, "z": 120 },
+      "status": "pending",
+      "assigned_uav": null,
+      "requirements": {
+        "min_battery": 35
+      }
+    }
+  ]
+}

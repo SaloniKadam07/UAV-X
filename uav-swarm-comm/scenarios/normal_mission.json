@@ -1,0 +1,36 @@
+{
+  "scenario": "normal_mission",
+  "description": "All UAVs healthy, no link failures. Three missions dispatched sequentially.",
+  "events": [
+    {
+      "time": 0,
+      "type": "mission_arrive",
+      "mission_id": "M1"
+    },
+    {
+      "time": 5,
+      "type": "mission_arrive",
+      "mission_id": "M2"
+    },
+    {
+      "time": 12,
+      "type": "mission_arrive",
+      "mission_id": "M3"
+    },
+    {
+      "time": 30,
+      "type": "mission_complete",
+      "mission_id": "M1"
+    },
+    {
+      "time": 40,
+      "type": "mission_complete",
+      "mission_id": "M2"
+    },
+    {
+      "time": 50,
+      "type": "mission_complete",
+      "mission_id": "M3"
+    }
+  ]
+}

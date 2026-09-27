@@ -1,0 +1,17 @@
+{
+  "gcs_position": { "x": 0, "y": 0, "z": 0 },
+  "max_comm_range": 1000,
+  "connectivity_check_interval": 2.0,
+  "battery_min_mission": 30,
+  "battery_min_relay": 20,
+  "battery_critical": 15,
+  "link_quality_min": 0.3,
+  "allocation_weights": {
+    "battery": 0.25,
+    "distance": 0.30,
+    "priority": 0.15,
+    "connectivity": 0.15,
+    "role": 0.15
+  },
+  "log_level": "INFO"
+}
